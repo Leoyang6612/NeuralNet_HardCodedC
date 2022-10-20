@@ -5,9 +5,9 @@ Neural Network Inference
 修改：楊博禕 v1.0
 
 ### v1.0, 08.23, young boy
->Dense Layer, Output Layer 確定ok`
+>Dense Layer, Output Layer 確定ok
 
->Normalize-mymodel_API.c 修正`
+>Normalize-mymodel_API.c 修正
 
 >用enum取代char[]：LAYER_TYPE & ACTI_TYPE，詳見layer_structure.h
 
