@@ -1,0 +1,9 @@
+{
+    "python.formatting.provider": "autopep8",
+    "files.associations": {
+        "stdbool.h": "c",
+        "mymodel_api.h": "c",
+        "stdio.h": "c",
+        "layer_struct.h": "c"
+    }
+}

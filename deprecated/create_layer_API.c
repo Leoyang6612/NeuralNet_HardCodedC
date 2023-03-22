@@ -7,7 +7,7 @@
 #include "mymodel_API.h"
 void Create_Input_Layer(LAYER *layer, uint8_t len, uint8_t depth)
 {
-    layer->input_layer = (INPUT_LAYER *)malloc(sizeof(INPUT_LAYER));
+    layer->input_layer = (InputLayer *)malloc(sizeof(InputLayer));
     layer->input_layer->len = len;
     layer->input_layer->depth = depth;
     layer->func = Input_Layer;

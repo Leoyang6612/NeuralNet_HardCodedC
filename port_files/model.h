@@ -1,4 +1,7 @@
-#include "layer_structure.h"
+#ifndef _MODEL_H_
+#define _MODEL_H_
 
-LAYER *load_model();
-unsigned int predict(float *input, LAYER *layer);
+unsigned int predict(Layer *, float *);
+Layer *load_model(void);
+
+#endif
