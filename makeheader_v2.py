@@ -367,25 +367,40 @@ unsigned int predict(Layer *headptr, float *input)
         switch (currLayer->type)
         {
         case LAYER_TYPE_CONV1D:
+        {
             Conv1dLayer *conv1d_layer = currLayer->conv1d_layer;
             conv1d_layer->exec(conv1d_layer);
             break;
+        }
+
         case LAYER_TYPE_DENSE:
+        {
             DenseLayer *dense_layer = currLayer->dense_layer;
             dense_layer->exec(dense_layer);
             break;
+        }
+
         case LAYER_TYPE_LSTM:
+        {
             LstmLayer *lstm_layer = currLayer->lstm_layer;
             lstm_layer->exec(lstm_layer);
             break;
+        }
+
         case LAYER_TYPE_AVERAGE_POOL1D:
+        {
             AvgPool1dLayer *avg_pool1d_layer = currLayer->avg_pool1d_layer;
             avg_pool1d_layer->exec(avg_pool1d_layer);
             break;
+        }
+
         case LAYER_TYPE_MAX_POOL1D:
+        {
             MaxPool1dLayer *max_pool1d_layer = currLayer->max_pool1d_layer;
             max_pool1d_layer->exec(max_pool1d_layer);
             break;
+        }
+
         default:
             break;
         }
