@@ -8,6 +8,104 @@
 
 #define DEBUG_FLAG 0
 
+void ReLU(float *input, int input_len)
+{
+    for (int i = 0; i < input_len; i++)
+    {
+        if (input[i] < 0)
+        {
+            input[i] = 0;
+        }
+    }
+    return;
+}
+
+void Softmax(float *input, int input_len)
+{
+    float base = 0;
+    for (int i = 0; i < input_len; i++)
+    {
+        base += exp(input[i]);
+    }
+
+    for (int j = 0; j < input_len; j++)
+    {
+        input[j] = exp(input[j]) / base;
+    }
+    return;
+}
+
+// LSTM default recurrent activation function in Keras
+void HardSigmoid(float *input, uint8_t input_len)
+{
+    uint8_t len_i;
+    for (len_i = 0; len_i < input_len; len_i++)
+    {
+        if (input[len_i] < -2.5)
+        {
+            input[len_i] = 0;
+        }
+        else if (input[len_i] > 2.5)
+        {
+            input[len_i] = 1;
+        }
+        else
+        {
+            input[len_i] = 0.2 * input[len_i] + 0.5;
+        }
+    }
+    return;
+}
+
+void Sigmoid(float *input, uint8_t input_len)
+{
+    uint8_t len_i;
+    for (len_i = 0; len_i < input_len; len_i++)
+    {
+        input[len_i] = 1 / (1 + exp(-1 * input[len_i]));
+    }
+    return;
+}
+
+void Tanh(float *input, uint8_t input_len)
+{
+    uint8_t len_i;
+    for (len_i = 0; len_i < input_len; len_i++)
+    {
+        input[len_i] = (float)tanh((double)input[len_i]);
+    }
+    return;
+}
+
+void Activation_Func(ACTI_TYPE activation,
+                     float *input,
+                     int input_len)
+{
+    switch (activation)
+    {
+    case ACTI_TYPE_RELU:
+        ReLU(input, input_len);
+        break;
+    case ACTI_TYPE_SOFTMAX:
+        Softmax(input, input_len);
+        break;
+    case ACTI_TYPE_SIGMOID:
+        Sigmoid(input, input_len);
+        break;
+    case ACTI_TYPE_HARDSIGMOID:
+        HardSigmoid(input, input_len);
+        break;
+    case ACTI_TYPE_TANH:
+        Tanh(input, input_len);
+        break;
+    default:
+        break;
+    }
+#if DEBUG_FLAG != 0
+    printf("Acti Function: %d\r\n", activation);
+#endif
+    return;
+}
 
 float *Arr_Copy(float *reference, uint8_t start, uint8_t len)
 {
@@ -501,7 +599,7 @@ void Next_Layer_Input(LAYER *p, float *input)
     case LAYER_TYPE_OUTPUT:
         p->next_layer->output_layer->output = input;
         break;
-    case LAYER_TYPE_CONV1D:
+    case LAYER_TYPE_INPUT:
         p->next_layer->conv1d_layer->input = input;
         break;
     case LAYER_TYPE_AVERAGE_POOL1D:
