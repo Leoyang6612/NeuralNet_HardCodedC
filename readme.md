@@ -5,12 +5,12 @@
 >Modified：楊博禕 v1.0, v2.0
 
 ## How to use?
->1. run makeheader_v2.py with Python3 => generate model.c model.h
+>1. run makeheader_v2.py with Python3 => generate model.c weight.h
 >2. include all the .c .h files into your project
->3. call predict() and load_model() functions in your c code
+>3. call predict() and load_model() functions in your c code (see main.c for example)
 >4. That's all!
 
-## VERSION
+## VERSION 1
 ### v1.0, 08.23.2022, young boy
 >Dense Layer, Output Layer ✓ 
 
@@ -23,7 +23,7 @@
 
 >makeheader.py 加入string interpolation，增加可讀性
 
-## VERSION
+## VERSION 2
 ### v2.0, 03.22.2023, young boy
 >modified: makeheader.py => makeheader_v2.py
 
