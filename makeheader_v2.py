@@ -18,7 +18,7 @@ class H5FileInterpreter:
 
         Path(f"{cwd}/port_files").mkdir(parents=True, exist_ok=True)
 
-        self.hfile = open(cwd / 'port_files/header.h', 'w')
+        self.hfile = open(cwd / 'port_files/weight.h', 'w')
         self.cfile = open(cwd / 'port_files/model.c', 'w')
 
         self.__make_include_lib()
@@ -77,9 +77,7 @@ class H5FileInterpreter:
         layer_name = layer.name
         class_name = type(layer).__name__
 
-        if class_name == 'LSTM':
-            print("Not support yet!")
-        elif class_name == 'Conv1D':
+        if class_name == 'Conv1D':
             output_shape = self.__create_conv1D_layer(layer, input_shape)
         elif class_name == 'Dense':
             output_shape = self.__create_dense_layer(layer, input_shape)
@@ -87,6 +85,9 @@ class H5FileInterpreter:
             output_shape = self.__create_avgpooling1D_layer(layer, input_shape)
         elif class_name == 'MaxPooling1D':
             output_shape = self.__create_maxpooling1D_layer(layer, input_shape)
+        else:
+            print(f"{class_name} not support yet!")
+            output_shape = input_shape
 
         return output_shape
 
@@ -437,7 +438,7 @@ unsigned int predict(Layer *headptr, float *input)
 #include <stdlib.h>
 #include <string.h>
 #include "layer_struct.h"
-#include "header.h"
+#include "weight.h"
 #include "model.h"
 #include "model_forward.h"
 ''')

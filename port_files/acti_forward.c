@@ -35,11 +35,11 @@ static void Softmax(float *input, int input_len)
     }
 
     // printf("Base: %f\n", base);
-    // for (int i = 0; i < input_len; i++)
-    // {
-    //     input[i] = (float)exp(input[i]) / base;
-    //     printf("%f\n", input[i]);
-    // }
+    for (int i = 0; i < input_len; i++)
+    {
+        input[i] = (float)exp(input[i]) / base;
+        // printf("%f\n", input[i]);
+    }
 }
 
 // LSTM default recurrent activation function in Keras
