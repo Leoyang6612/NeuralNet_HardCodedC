@@ -3,7 +3,7 @@
 #include "layer_struct.h"
 #include "acti_forward.h"
 
-static void ReLU(float *input, int input_len)
+static inline void ReLU(float *input, int input_len)
 {
     for (int i = 0; i < input_len; i++)
     {
@@ -15,7 +15,7 @@ static void ReLU(float *input, int input_len)
     return;
 }
 
-static void Softmax(float *input, int input_len)
+static inline void Softmax(float *input, int input_len)
 {
     // find max in input to prevent exp ovreflow!
     float max = input[0];
@@ -43,42 +43,39 @@ static void Softmax(float *input, int input_len)
 }
 
 // LSTM default recurrent activation function in Keras
-static void HardSigmoid(float *input, int input_len)
+static inline void HardSigmoid(float *input, int input_len)
 {
-    int len_i;
-    for (len_i = 0; len_i < input_len; len_i++)
+    for (int i = 0; i < input_len; i++)
     {
-        if (input[len_i] < -2.5)
+        if (input[i] < -2.5)
         {
-            input[len_i] = 0;
+            input[i] = 0;
         }
-        else if (input[len_i] > 2.5)
+        else if (input[i] > 2.5)
         {
-            input[len_i] = 1;
+            input[i] = 1;
         }
         else
         {
-            input[len_i] = 0.2 * input[len_i] + 0.5;
+            input[i] = 0.2 * input[i] + 0.5;
         }
     }
 }
 
-static void Sigmoid(float *input, int input_len)
+static inline void Sigmoid(float *input, int input_len)
 {
-    int len_i;
-    for (len_i = 0; len_i < input_len; len_i++)
+    for (int i = 0; i < input_len; i++)
     {
-        input[len_i] = 1 / (1 + exp(-1 * input[len_i]));
+        input[i] = 1 / (1 + exp(-1 * input[i]));
     }
-    return;
 }
 
-static void Tanh(float *input, int input_len)
+static inline void Tanh(float *input, int input_len)
 {
-    int len_i;
-    for (len_i = 0; len_i < input_len; len_i++)
+
+    for (int i = 0; i < input_len; i++)
     {
-        input[len_i] = (float)tanh(input[len_i]);
+        input[i] = (float)tanh(input[i]);
     }
 }
 

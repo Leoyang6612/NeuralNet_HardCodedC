@@ -65,17 +65,40 @@ typedef struct
 typedef struct
 {
     // input_shape(timestep, input_dim)
-    // output_shape(timestep, n)
+    // output_shape(timestep, input_dim)
     int in_dim0; // time_step
     int in_dim1; // input_dim
-    int units;   // output_len
+    int units;   // == output_len if (return_seq == false)
 
-    float *input_weight;
-    float *recurrent_weight;
-    float *bias;
+    // Ex:
+    // input_shape = (20, 3)
+    // units = 16
+    // output_shape = (16,)         return_seq == false
+    // output_shape = (20, 16)      return_seq == true
+    
+
+    // input_weight (input_dim, 4 * units)
+    // input gate
+    float *weight_i;
+    float *rcr_weight_i;
+    float *bias_i;
+
+    // forget gate
+    float *weight_f;
+    float *rcr_weight_f;
+    float *bias_f;
+
+    // new candidate cell state: Ct_bar
+    float *weight_c;
+    float *rcr_weight_c;
+    float *bias_c;
+
+    // output gate
+    float *weight_o;
+    float *rcr_weight_o;
+    float *bias_o;
+
     bool return_seq;
-
-    ActivationType act;
 } LstmInfo;
 
 typedef struct
@@ -114,6 +137,15 @@ typedef struct LstmLayer_t
     void (*exec)(struct LstmLayer_t *);
     float *input;
     float *output;
+    float *Xt;
+    float *it;
+    float *ht;
+    float *ht_1;
+    float *ft;
+    float *Ct;
+    float *Ct_1;
+    float *Ct_bar;
+    float *Ot;
 } LstmLayer;
 
 typedef struct AvgPool1dLayer_t

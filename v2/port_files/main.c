@@ -7,36 +7,34 @@
 #include "model.h"
 #include <time.h>
 
-#define TEST_TIMES 10
+#define TEST_TIMES 10000
 #define AVG_TIMES 10
+
+Layer *myModel = NULL;
+float test_input[60] = {0.};
+
 void timeFunction(void (*function)())
 {
-    clock_t start, end;
-    double cpu_time_used_average = 0.0f;
-    double cpu_time_used;
+    struct timespec start, end;
+    double cpu_time_used_average = 0.0;
+    double cpu_time_used_for_each_predict;
     for (int i = 0; i < AVG_TIMES; i++)
     {
-        start = clock();
+        clock_gettime(CLOCK_MONOTONIC, &start);
         function();
-        end = clock();
-        cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-        cpu_time_used_average += cpu_time_used;
-        printf("The function took %f seconds to execute.\n", cpu_time_used);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        cpu_time_used_for_each_predict = ((double)(end.tv_sec - start.tv_sec) * 1e6 +
+                                          (double)(end.tv_nsec - start.tv_nsec) * 1e-3);
+        cpu_time_used_for_each_predict /= TEST_TIMES;
+        cpu_time_used_average += cpu_time_used_for_each_predict;
+        printf("The function took %.3f microseconds for each prediction.\n", cpu_time_used_for_each_predict);
     }
     cpu_time_used_average /= AVG_TIMES;
-    printf("The function took %f seconds to execute.(%d in average)\n", cpu_time_used_average, AVG_TIMES);
+    printf("The function took %.3f microseconds to execute (%d times in average).\n", cpu_time_used_average, AVG_TIMES);
 }
 
 void myFunction()
 {
-    float test_input[60] = {0.};
-    for (int i = 0; i < 60; i++)
-    {
-        test_input[i] = 60 + 2 * i;
-        // printf("%f ", test_input[i]);
-    }
-    // printf("\n");
-    Layer *myModel = load_model();
     for (int i = 0; i < TEST_TIMES; i++)
     {
         unsigned int ret = predict(myModel, test_input);
@@ -46,6 +44,13 @@ void myFunction()
 
 int main()
 {
+    for (int i = 0; i < 60; i++)
+    {
+        test_input[i] = 60 + 2 * i;
+        // printf("%f ", test_input[i]);
+    }
+    // printf("\n");
+    myModel = load_model();
     timeFunction(myFunction);
     return 0;
 }

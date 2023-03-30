@@ -5,13 +5,14 @@ from pathlib import Path
 import math
 # %%
 
+
 class H5FileInterpreter:
     def __init__(self, model_path):
         self.input_layer_not_create = True
         cwd = Path(__file__).parent
         self.model_path = cwd / model_path
 
-        model = load_model(model_path)
+        model = load_model(model_path, compile=False)
         self.layers = model.layers
         self.layer_count = 1
         self.last_layer_ouptut_buffer = ""
@@ -81,6 +82,8 @@ class H5FileInterpreter:
             output_shape = self.__create_conv1D_layer(layer, input_shape)
         elif class_name == 'Dense':
             output_shape = self.__create_dense_layer(layer, input_shape)
+        elif class_name == 'LSTM':
+            output_shape = self.__create_lstm_layer(layer, input_shape)
         elif class_name == 'AveragePooling1D':
             output_shape = self.__create_avgpooling1D_layer(layer, input_shape)
         elif class_name == 'MaxPooling1D':
@@ -142,6 +145,7 @@ Layer *load_model()
     return headptr;
 }}
     ''')
+
     def __create_conv1D_layer(self, layer, input_shape):
         # Ex:
         # input_shape (Timestep, Feature)/stride
@@ -279,6 +283,158 @@ Layer *load_model()
 
         return (output_len,)
 
+    def __create_lstm_layer(self, layer, input_shape):
+        layer_name = layer.name
+
+        weight_name = f"{layer_name}_w"
+        recurr_weight_name = f"{layer_name}_u"
+        bias_name = f"{layer_name}_b"
+
+        time_step = int(input_shape[0])
+        input_features = int(input_shape[1])
+
+        return_seq = layer.return_sequences
+        units = layer.units
+        output_len = units
+
+        info_name = f"{layer_name}_info"
+        output_buffer = f"{layer_name}_output"
+
+        self.cfile.write(f'''
+    // Layer {self.layer_count}: {layer_name}
+    float *{output_buffer} = (float *)malloc(({time_step if return_seq else 1} * {units}) * sizeof(float));
+
+    currLayer->type = LAYER_TYPE_LSTM;
+    currLayer->name = strdup("Lstm");
+    currLayer->lstm_layer = (LstmLayer *)malloc(sizeof(LstmLayer));
+    currLayer->lstm_layer->exec = lstm_forward;
+    currLayer->lstm_layer->input = {self.last_layer_ouptut_buffer};
+    currLayer->lstm_layer->output = {output_buffer};
+
+    currLayer->lstm_layer->Xt = (float *)calloc({input_features}, sizeof(float));
+    currLayer->lstm_layer->it = (float *)calloc({units}, sizeof(float));
+    currLayer->lstm_layer->ht = (float *)calloc({units}, sizeof(float));
+    currLayer->lstm_layer->ht_1 = (float *)calloc({units}, sizeof(float));
+    currLayer->lstm_layer->ft = (float *)calloc({units}, sizeof(float));
+    currLayer->lstm_layer->Ct = (float *)calloc({units}, sizeof(float));
+    currLayer->lstm_layer->Ct_1 = (float *)calloc({units}, sizeof(float));
+    currLayer->lstm_layer->Ct_bar = (float *)calloc({units}, sizeof(float));
+    currLayer->lstm_layer->Ot = (float *)calloc({units}, sizeof(float));
+
+    LstmInfo *{info_name} = &(currLayer->lstm_layer->info);
+    {info_name}->in_dim0 = {time_step}; // time_step
+    {info_name}->in_dim1 = {input_features};  // features
+    {info_name}->units = {units};
+    {info_name}->return_seq = {"true" if return_seq else "false"};
+    // input gate
+    {info_name}->weight_i = (float *){weight_name}_i;
+    {info_name}->rcr_weight_i = (float *){recurr_weight_name}_i;
+    {info_name}->bias_i = (float *){bias_name}_i;
+    // forget gate
+    {info_name}->weight_f = (float *){weight_name}_f;
+    {info_name}->rcr_weight_f = (float *){recurr_weight_name}_f;
+    {info_name}->bias_f = (float *){bias_name}_f;
+    // new candidate cell state: Ct_bar
+    {info_name}->weight_c = (float *){weight_name}_c;
+    {info_name}->rcr_weight_c = (float *){recurr_weight_name}_c;
+    {info_name}->bias_c = (float *){bias_name}_c;
+    // output gate
+    {info_name}->weight_o = (float *){weight_name}_o;
+    {info_name}->rcr_weight_o = (float *){recurr_weight_name}_o;
+    {info_name}->bias_o = (float *){bias_name}_o;
+
+    currLayer->next = (Layer *)malloc(sizeof(Layer));
+    currLayer = currLayer->next;
+
+    ''')
+        self.last_layer_ouptut_buffer = output_buffer
+
+        weights = layer.get_weights()
+
+        # weight (for input)
+        weight_kernel = weights[0]
+        assert weight_kernel.shape == (
+            input_features, output_len * 4), 'Create_Lstm_Layer weight incorrect!'
+        Cstring = self.__nparray_to_Cstring(weight_kernel[:, :units])
+        self.hfile.write(
+            f'float {weight_name}_i[{input_features}][{output_len}] = ')
+        self.hfile.write(Cstring)
+
+        Cstring = self.__nparray_to_Cstring(weight_kernel[:, units: units * 2])
+        self.hfile.write(
+            f'float {weight_name}_f[{input_features}][{output_len}] = ')
+        self.hfile.write(Cstring)
+
+        Cstring = self.__nparray_to_Cstring(
+            weight_kernel[:, units * 2: units * 3])
+        self.hfile.write(
+            f'float {weight_name}_c[{input_features}][{output_len}] = ')
+        self.hfile.write(Cstring)
+
+        Cstring = self.__nparray_to_Cstring(
+            weight_kernel[:, units * 3:])
+        self.hfile.write(
+            f'float {weight_name}_o[{input_features}][{output_len}] = ')
+        self.hfile.write(Cstring)
+
+        # recurrent weight
+        recurr_weight_kernel = weights[1]
+        assert recurr_weight_kernel.shape == (
+            output_len, output_len * 4), 'Create_Lstm_Layer recurrent weight incorrect!'
+        Cstring = self.__nparray_to_Cstring(recurr_weight_kernel[:, :units])
+        self.hfile.write(
+            f'float {recurr_weight_name}_i[{output_len}][{output_len}] = ')
+        self.hfile.write(Cstring)
+
+        Cstring = self.__nparray_to_Cstring(
+            recurr_weight_kernel[:, units: units * 2])
+        self.hfile.write(
+            f'float {recurr_weight_name}_f[{output_len}][{output_len}] = ')
+        self.hfile.write(Cstring)
+
+        Cstring = self.__nparray_to_Cstring(
+            recurr_weight_kernel[:, units * 2: units * 3])
+        self.hfile.write(
+            f'float {recurr_weight_name}_c[{output_len}][{output_len}] = ')
+        self.hfile.write(Cstring)
+
+        Cstring = self.__nparray_to_Cstring(
+            recurr_weight_kernel[:, units * 3:])
+        self.hfile.write(
+            f'float {recurr_weight_name}_o[{output_len}][{output_len}] = ')
+        self.hfile.write(Cstring)
+
+        # bias
+        weight_bias = weights[2]
+        assert weight_bias.shape == (
+            output_len * 4,), 'Create_Lstm_Layer bias incorrect!'
+        Cstring = self.__nparray_to_Cstring(weight_bias[:units])
+        self.hfile.write(
+            f'float {bias_name}_i[{output_len}] = ')
+        self.hfile.write(Cstring)
+
+        Cstring = self.__nparray_to_Cstring(weight_bias[units: units * 2])
+        self.hfile.write(
+            f'float {bias_name}_f[{output_len}] = ')
+        self.hfile.write(Cstring)
+
+        Cstring = self.__nparray_to_Cstring(
+            weight_bias[units * 2: units * 3])
+        self.hfile.write(
+            f'float {bias_name}_c[{output_len}] = ')
+        self.hfile.write(Cstring)
+
+        Cstring = self.__nparray_to_Cstring(
+            weight_bias[units * 3:])
+        self.hfile.write(
+            f'float {bias_name}_o[{output_len}] = ')
+        self.hfile.write(Cstring)
+
+        if return_seq:
+            return (time_step, output_len)
+        else:
+            return (output_len,)
+
     def __create_avgpooling1D_layer(self, layer, input_shape):
         layer_name = layer.name
 
@@ -308,6 +464,7 @@ Layer *load_model()
     {info_name}->pool_size = {pool_size};
     currLayer->next = (Layer *)malloc(sizeof(Layer));
     currLayer = currLayer->next;
+
     ''')
         self.last_layer_ouptut_buffer = output_buffer
 
@@ -342,6 +499,7 @@ Layer *load_model()
     {info_name}->pool_size = {pool_size};
     currLayer->next = (Layer *)malloc(sizeof(Layer));
     currLayer = currLayer->next;
+
     ''')
         self.last_layer_ouptut_buffer = output_buffer
 
@@ -361,8 +519,8 @@ unsigned int predict(Layer *headptr, float *input)
     {
         input_layer->exec(input_layer);
     }
-
     currLayer = currLayer->next;
+
     while (currLayer && currLayer->type != LAYER_TYPE_OUTPUT)
     {
         switch (currLayer->type)
@@ -417,7 +575,7 @@ unsigned int predict(Layer *headptr, float *input)
 
     for (int i = 0; i < units; i++)
     {
-        printf("%.6f\\n", output[i]);
+        printf("%.4f\\n", output[i]);
     }
 
     for (int i = 1; i < units; i++)
@@ -448,6 +606,6 @@ unsigned int predict(Layer *headptr, float *input)
 if __name__ == "__main__":
     np.set_printoptions(suppress=True, threshold=np.inf, precision=4)
 
-    myInterpreter = H5FileInterpreter('weight/head_tfks_cnn1d.h5')
+    myInterpreter = H5FileInterpreter('model/head_tfks_lstm.h5')
     myInterpreter.traverse_layer()
 # %%

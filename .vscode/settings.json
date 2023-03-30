@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "acti_forward.h": "c"
+    },
+    "python.formatting.provider": "autopep8"
+}
