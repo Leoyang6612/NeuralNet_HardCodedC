@@ -3,11 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "layer_struct.h"
 #include "model.h"
-#include <time.h>
 
-#define TEST_TIMES 10000
+#define TEST_TIMES 1
 #define AVG_TIMES 10
 
 Layer *myModel = NULL;
@@ -27,10 +27,10 @@ void timeFunction(void (*function)())
                                           (double)(end.tv_nsec - start.tv_nsec) * 1e-3);
         cpu_time_used_for_each_predict /= TEST_TIMES;
         cpu_time_used_average += cpu_time_used_for_each_predict;
-        printf("The function took %.3f microseconds for each prediction.\n", cpu_time_used_for_each_predict);
+        printf("The function took %.4f microseconds for each prediction.\n", cpu_time_used_for_each_predict);
     }
     cpu_time_used_average /= AVG_TIMES;
-    printf("The function took %.3f microseconds to execute (%d times in average).\n", cpu_time_used_average, AVG_TIMES);
+    printf("The function took %.4f microseconds to execute (%d times in average).\n", cpu_time_used_average, AVG_TIMES);
 }
 
 void myFunction()

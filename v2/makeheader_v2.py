@@ -43,8 +43,9 @@ class H5FileInterpreter:
         print("="*40)
 
         for layer in self.layers:
-            print("Layer name:", layer.name)
-            if "dropout" in layer.name or "flatten" in layer.name:
+            
+            print(f"Layer: {layer.name} ({type(layer).__name__})")
+            if type(layer).__name__ in ["Flatten", "Dropout"]:
                 print("="*40)
                 continue
 
@@ -596,9 +597,9 @@ unsigned int predict(Layer *headptr, float *input)
 #include <stdlib.h>
 #include <string.h>
 #include "layer_struct.h"
-#include "weight.h"
 #include "model.h"
 #include "model_forward.h"
+#include "weight.h"
 ''')
 
 
@@ -606,6 +607,6 @@ unsigned int predict(Layer *headptr, float *input)
 if __name__ == "__main__":
     np.set_printoptions(suppress=True, threshold=np.inf, precision=4)
 
-    myInterpreter = H5FileInterpreter('model/head_tfks_lstm.h5')
+    myInterpreter = H5FileInterpreter('model/head_tfks_cnn1d.h5')
     myInterpreter.traverse_layer()
 # %%

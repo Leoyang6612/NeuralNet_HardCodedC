@@ -7,6 +7,7 @@
 #include "model_forward.h"
 #include "acti_forward.h"
 #include "matrix_op.h"
+
 // #define PRINT_LAYER_SHAPE
 // #define PRINT_LAYER_OUTPUT
 
@@ -125,7 +126,7 @@ void conv1d_forward(Conv1dLayer *layer)
                 }
             }
             output[i * output_features + f] = (conv_sum + bias[i]);
-            // output[i][f] += (conv_sum + bias[i]);
+            // output[i][f] = (conv_sum + bias[i]);
         }
     }
 
@@ -159,17 +160,8 @@ void dense_forward(DenseLayer *layer)
     printf("(%d,) => (%d,)\n", input_length, output_length);
 #endif
 
-    for (int i = 0; i < output_length; i++)
-    {
-        float sum = 0.0f;
-        for (int j = 0; j < input_length; j++)
-        {
-            sum += input[j] * weight[j * output_length + i];
-            // sum += input[j] * weight[j][i];
-        }
-        output[i] = (sum + bias[i]);
-    }
-
+    // y = Wx
+    vector_map(output, weight, input, input_length, output_length, BUFFER_STATE_OVERWRITE);
     acti_forward(act, output, output_length);
 
 #ifdef PRINT_LAYER_OUTPUT

@@ -75,7 +75,6 @@ typedef struct
     // units = 16
     // output_shape = (16,)         return_seq == false
     // output_shape = (20, 16)      return_seq == true
-    
 
     // input_weight (input_dim, 4 * units)
     // input gate
