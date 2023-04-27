@@ -1,8 +1,7 @@
 ## Project: Neural Network Inference on C code
 
->Author：吳鑑軒 & NeatLab學長
-
->Modified：楊博禕 v1.0, v2.0
+>v1.0 Author：吳鑑軒 & NeatLab學長
+>v2.0 Author：楊博禕
 
 ## How to use?
 >1. run makeheader_v2.py with Python3 => generate model.c weight.h
@@ -27,6 +26,11 @@
 ### v2.0, 03.22.2023, young boy
 >modified: makeheader.py => makeheader_v2.py
 
->Support layer: Conv1D, Dense
+>Support layer: Conv1D, Dense, Lstm
 
->Support activation function: ReLU, softmax, sigmoid, hardsigmoid, tanh
+>Support activation function: ReLU, softmax, sigmoid, hardsigmoid, tanh, linear
+
+## VERSION 2.1
+### v2.0, 04.27.2023, young boy
+>ARM CMSIS-DSP lib
+>Support layer: Dense only

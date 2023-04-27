@@ -21,7 +21,8 @@ typedef enum
     ACTI_TYPE_SOFTMAX,
     ACTI_TYPE_SIGMOID,
     ACTI_TYPE_HARDSIGMOID,
-    ACTI_TYPE_TANH
+    ACTI_TYPE_TANH,
+    ACTI_TYPE_LINEAR
 } ActivationType;
 
 typedef struct

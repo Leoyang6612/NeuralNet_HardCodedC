@@ -98,6 +98,8 @@ void acti_forward(ActivationType activation, float *input, int input_len)
     case ACTI_TYPE_TANH:
         Tanh(input, input_len);
         break;
+    case ACTI_TYPE_LINEAR:
+        break;
     default:
         printf("Acti:%d undefined!\n", activation);
         break;

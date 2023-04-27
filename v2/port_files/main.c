@@ -8,7 +8,7 @@
 #include "model.h"
 
 #define TEST_TIMES 1
-#define AVG_TIMES 10
+#define AVG_TIMES 1
 
 Layer *myModel = NULL;
 float test_input[60] = {0.};
@@ -38,11 +38,11 @@ void myFunction()
     for (int i = 0; i < TEST_TIMES; i++)
     {
         unsigned int ret = predict(myModel, test_input);
-        // printf("class: %u\n", ret);
+        printf("class: %u\n", ret);
     }
 }
 
-int main()
+int main(int argc, char* argv[])
 {
     for (int i = 0; i < 60; i++)
     {

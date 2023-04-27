@@ -44,7 +44,7 @@ void normalize_forward(InputLayer *layer)
     {
         for (int j = 0; j < input_depth; j++)
         {
-            int curr_val = input[i * input_depth + j];
+            float curr_val = input[i * input_depth + j];
             min_arr[j] = (min_arr[j] > curr_val) ? curr_val : min_arr[j];
             max_arr[j] = (max_arr[j] < curr_val) ? curr_val : max_arr[j];
         }

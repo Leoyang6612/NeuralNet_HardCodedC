@@ -43,7 +43,7 @@ class H5FileInterpreter:
         print("="*40)
 
         for layer in self.layers:
-            
+
             print(f"Layer: {layer.name} ({type(layer).__name__})")
             if type(layer).__name__ in ["Flatten", "Dropout"]:
                 print("="*40)
@@ -607,6 +607,6 @@ unsigned int predict(Layer *headptr, float *input)
 if __name__ == "__main__":
     np.set_printoptions(suppress=True, threshold=np.inf, precision=4)
 
-    myInterpreter = H5FileInterpreter('model/head_tfks_cnn1d.h5')
+    myInterpreter = H5FileInterpreter('model/REhead_tfks_dnn_fft_CT.h5')
     myInterpreter.traverse_layer()
 # %%

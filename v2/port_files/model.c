@@ -96,7 +96,7 @@ Layer *load_model()
     currLayer = headptr;
 
     // Layer 1: input_layer
-    float *input = (float *)malloc((20 * 3) * sizeof(float));
+    float *input = (float *)malloc((5 * 1) * sizeof(float));
     currLayer->type = LAYER_TYPE_INPUT;
     currLayer->name = strdup("Input");
     currLayer->input_layer = (InputLayer *)malloc(sizeof(InputLayer));
@@ -106,146 +106,78 @@ Layer *load_model()
     currLayer->input_layer->output = input;
 
     InputInfo *input_info = &(currLayer->input_layer->info);
-    input_info->dim0 = 20;
-    input_info->dim1 = 3;
+    input_info->dim0 = 5;
+    input_info->dim1 = 1;
     input_info->normalize = true;
     currLayer->next = (Layer *)malloc(sizeof(Layer));
     currLayer = currLayer->next;
 
     
-    // Layer 2: conv1d_3
-    float *conv1d_3_output = (float *)malloc((18 * 32) * sizeof(float));
-    currLayer->type = LAYER_TYPE_CONV1D;
-    currLayer->name = strdup("Conv1D");
-    currLayer->conv1d_layer = (Conv1dLayer *)malloc(sizeof(Conv1dLayer));
-    currLayer->conv1d_layer->exec = conv1d_forward;
-    currLayer->conv1d_layer->input = input;
-    currLayer->conv1d_layer->output = conv1d_3_output;
-
-    Conv1dInfo *conv1d_3_info = &(currLayer->conv1d_layer->info);
-    conv1d_3_info->in_dim0 = 20; // input_len
-    conv1d_3_info->in_dim1 = 3;  // depth
-    conv1d_3_info->filters = 32; // filters
-    conv1d_3_info->kernel_size = 3;
-    conv1d_3_info->padding = 0;
-    conv1d_3_info->stride = 1;
-    conv1d_3_info->weight = (float *)conv1d_3_w;
-    conv1d_3_info->bias = (float *)conv1d_3_b;
-    conv1d_3_info->act = ACTI_TYPE_RELU;
-    currLayer->next = (Layer *)malloc(sizeof(Layer));
-    currLayer = currLayer->next;
-
-    
-    // Layer 3: conv1d_4
-    float *conv1d_4_output = (float *)malloc((16 * 64) * sizeof(float));
-    currLayer->type = LAYER_TYPE_CONV1D;
-    currLayer->name = strdup("Conv1D");
-    currLayer->conv1d_layer = (Conv1dLayer *)malloc(sizeof(Conv1dLayer));
-    currLayer->conv1d_layer->exec = conv1d_forward;
-    currLayer->conv1d_layer->input = conv1d_3_output;
-    currLayer->conv1d_layer->output = conv1d_4_output;
-
-    Conv1dInfo *conv1d_4_info = &(currLayer->conv1d_layer->info);
-    conv1d_4_info->in_dim0 = 18; // input_len
-    conv1d_4_info->in_dim1 = 32;  // depth
-    conv1d_4_info->filters = 64; // filters
-    conv1d_4_info->kernel_size = 3;
-    conv1d_4_info->padding = 0;
-    conv1d_4_info->stride = 1;
-    conv1d_4_info->weight = (float *)conv1d_4_w;
-    conv1d_4_info->bias = (float *)conv1d_4_b;
-    conv1d_4_info->act = ACTI_TYPE_RELU;
-    currLayer->next = (Layer *)malloc(sizeof(Layer));
-    currLayer = currLayer->next;
-
-    
-    float *max_pooling1d_1_output = (float *)malloc((8 * 64) * sizeof(float));
-    
-    // Layer 4: max_pooling1d_1
-    currLayer->type = LAYER_TYPE_MAX_POOL1D;
-    currLayer->name = strdup("MaxPool1D");
-    currLayer->max_pool1d_layer = (MaxPool1dLayer *)malloc(sizeof(MaxPool1dLayer));
-    currLayer->max_pool1d_layer->exec = max_pool1d_forward;
-    currLayer->max_pool1d_layer->input = conv1d_4_output;
-    currLayer->max_pool1d_layer->output = max_pooling1d_1_output;
-
-    MaxPool1dInfo *max_pooling1d_1_info = &(currLayer->max_pool1d_layer->info);
-    max_pooling1d_1_info->in_dim0 = 16; // input_len
-    max_pooling1d_1_info->in_dim1 = 64; // depth
-    max_pooling1d_1_info->pool_size = 2;
-    currLayer->next = (Layer *)malloc(sizeof(Layer));
-    currLayer = currLayer->next;
-
-    
-    // Layer 5: conv1d_5
-    float *conv1d_5_output = (float *)malloc((8 * 32) * sizeof(float));
-    currLayer->type = LAYER_TYPE_CONV1D;
-    currLayer->name = strdup("Conv1D");
-    currLayer->conv1d_layer = (Conv1dLayer *)malloc(sizeof(Conv1dLayer));
-    currLayer->conv1d_layer->exec = conv1d_forward;
-    currLayer->conv1d_layer->input = max_pooling1d_1_output;
-    currLayer->conv1d_layer->output = conv1d_5_output;
-
-    Conv1dInfo *conv1d_5_info = &(currLayer->conv1d_layer->info);
-    conv1d_5_info->in_dim0 = 8; // input_len
-    conv1d_5_info->in_dim1 = 64;  // depth
-    conv1d_5_info->filters = 32; // filters
-    conv1d_5_info->kernel_size = 3;
-    conv1d_5_info->padding = 1;
-    conv1d_5_info->stride = 1;
-    conv1d_5_info->weight = (float *)conv1d_5_w;
-    conv1d_5_info->bias = (float *)conv1d_5_b;
-    conv1d_5_info->act = ACTI_TYPE_RELU;
-    currLayer->next = (Layer *)malloc(sizeof(Layer));
-    currLayer = currLayer->next;
-
-    
-    // Layer 6: dense_2
-    float *dense_2_output = (float *)malloc((32) * sizeof(float));
+    // Layer 2: dense
+    float *dense_output = (float *)malloc((64) * sizeof(float));
     currLayer->type = LAYER_TYPE_DENSE;
     currLayer->name = strdup("Dense");
     currLayer->dense_layer = (DenseLayer *)malloc(sizeof(DenseLayer));
     currLayer->dense_layer->exec = dense_forward;
-    currLayer->dense_layer->input = conv1d_5_output;
+    currLayer->dense_layer->input = input;
+    currLayer->dense_layer->output = dense_output;
+
+    DenseInfo *dense_info = &(currLayer->dense_layer->info);
+    dense_info->in_dim0 = 5;      // input_len
+    dense_info->units = 64;       // output_units
+    dense_info->weight = (float *)dense_w;
+    dense_info->bias = (float *)dense_b;
+    dense_info->act = ACTI_TYPE_RELU;
+    currLayer->next = (Layer *)malloc(sizeof(Layer));
+    currLayer = currLayer->next;
+
+    
+    // Layer 3: dense_1
+    float *dense_1_output = (float *)malloc((32) * sizeof(float));
+    currLayer->type = LAYER_TYPE_DENSE;
+    currLayer->name = strdup("Dense");
+    currLayer->dense_layer = (DenseLayer *)malloc(sizeof(DenseLayer));
+    currLayer->dense_layer->exec = dense_forward;
+    currLayer->dense_layer->input = dense_output;
+    currLayer->dense_layer->output = dense_1_output;
+
+    DenseInfo *dense_1_info = &(currLayer->dense_layer->info);
+    dense_1_info->in_dim0 = 64;      // input_len
+    dense_1_info->units = 32;       // output_units
+    dense_1_info->weight = (float *)dense_1_w;
+    dense_1_info->bias = (float *)dense_1_b;
+    dense_1_info->act = ACTI_TYPE_RELU;
+    currLayer->next = (Layer *)malloc(sizeof(Layer));
+    currLayer = currLayer->next;
+
+    
+    // Layer 4: dense_2
+    float *dense_2_output = (float *)malloc((1) * sizeof(float));
+    currLayer->type = LAYER_TYPE_DENSE;
+    currLayer->name = strdup("Dense");
+    currLayer->dense_layer = (DenseLayer *)malloc(sizeof(DenseLayer));
+    currLayer->dense_layer->exec = dense_forward;
+    currLayer->dense_layer->input = dense_1_output;
     currLayer->dense_layer->output = dense_2_output;
 
     DenseInfo *dense_2_info = &(currLayer->dense_layer->info);
-    dense_2_info->in_dim0 = 256;      // input_len
-    dense_2_info->units = 32;       // output_units
+    dense_2_info->in_dim0 = 32;      // input_len
+    dense_2_info->units = 1;       // output_units
     dense_2_info->weight = (float *)dense_2_w;
     dense_2_info->bias = (float *)dense_2_b;
-    dense_2_info->act = ACTI_TYPE_RELU;
+    dense_2_info->act = ACTI_TYPE_LINEAR;
     currLayer->next = (Layer *)malloc(sizeof(Layer));
     currLayer = currLayer->next;
 
     
-    // Layer 7: dense_3
-    float *dense_3_output = (float *)malloc((2) * sizeof(float));
-    currLayer->type = LAYER_TYPE_DENSE;
-    currLayer->name = strdup("Dense");
-    currLayer->dense_layer = (DenseLayer *)malloc(sizeof(DenseLayer));
-    currLayer->dense_layer->exec = dense_forward;
-    currLayer->dense_layer->input = dense_2_output;
-    currLayer->dense_layer->output = dense_3_output;
-
-    DenseInfo *dense_3_info = &(currLayer->dense_layer->info);
-    dense_3_info->in_dim0 = 32;      // input_len
-    dense_3_info->units = 2;       // output_units
-    dense_3_info->weight = (float *)dense_3_w;
-    dense_3_info->bias = (float *)dense_3_b;
-    dense_3_info->act = ACTI_TYPE_SOFTMAX;
-    currLayer->next = (Layer *)malloc(sizeof(Layer));
-    currLayer = currLayer->next;
-
-    
-    // Layer 8: output_layer
+    // Layer 5: output_layer
     currLayer->type = LAYER_TYPE_OUTPUT;
     currLayer->name = strdup("Output");
     currLayer->output_layer = (OutputLayer *)malloc(sizeof(OutputLayer));
-    currLayer->output_layer->output = dense_3_output;
+    currLayer->output_layer->output = dense_2_output;
 
     OutputInfo *output_info = &(currLayer->output_layer->info);
-    output_info->dim0 = 2;
+    output_info->dim0 = 1;
     currLayer->next = NULL;
 
     return headptr;
