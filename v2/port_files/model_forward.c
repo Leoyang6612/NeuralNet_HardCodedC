@@ -162,6 +162,8 @@ void dense_forward(DenseLayer *layer)
 
     // y = Wx
     vector_map(output, weight, input, input_length, output_length, BUFFER_STATE_OVERWRITE);
+    // y = x + b
+    vector_pointwise_add(output, output, bias, output_length, BUFFER_STATE_OVERWRITE);
     acti_forward(act, output, output_length);
 
 #ifdef PRINT_LAYER_OUTPUT

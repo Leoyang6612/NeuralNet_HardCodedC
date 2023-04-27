@@ -11,7 +11,7 @@
 #define AVG_TIMES 1
 
 Layer *myModel = NULL;
-float test_input[60] = {0.};
+float test_input[5] = {0.};
 
 void timeFunction(void (*function)())
 {
@@ -38,18 +38,18 @@ void myFunction()
     for (int i = 0; i < TEST_TIMES; i++)
     {
         unsigned int ret = predict(myModel, test_input);
-        printf("class: %u\n", ret);
+        // printf("class: %u\n", ret);
     }
 }
 
 int main(int argc, char* argv[])
 {
-    for (int i = 0; i < 60; i++)
+    for (int i = 0; i < 5; i++)
     {
-        test_input[i] = 60 + 2 * i;
-        // printf("%f ", test_input[i]);
+        test_input[i] = 60 + 2.5 * i;
+        printf("%f ", test_input[i]);
     }
-    // printf("\n");
+    printf("\n");
     myModel = load_model();
     timeFunction(myFunction);
     return 0;

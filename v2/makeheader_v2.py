@@ -19,8 +19,9 @@ class H5FileInterpreter:
 
         Path(f"{cwd}/port_files").mkdir(parents=True, exist_ok=True)
 
-        self.hfile = open(cwd / 'port_files/weight.h', 'w')
-        self.cfile = open(cwd / 'port_files/model.c', 'w')
+        self.model_c = open(cwd / 'port_files/model.c', 'w')
+        self.weight_c = open(cwd / 'port_files/weight.c', 'w')
+        self.weight_h = open(cwd / 'port_files/weight.h', 'w')
 
         self.__make_include_lib()
         self.__make_predict_func()
@@ -70,8 +71,9 @@ class H5FileInterpreter:
         self.__create_output_layer(output_shape)
         self.layer_count += 1
 
-        self.cfile.close()
-        self.hfile.close()
+        self.model_c.close()
+        self.weight_c.close()
+        self.weight_h.close()
 
     def __create_layer(self, layer, input_shape):
         # 'layer_name': 'conv1d_14';  'class_name': 'Conv1D'
@@ -99,7 +101,7 @@ class H5FileInterpreter:
         input_len = input_shape[0]
         input_dim = input_shape[1] if len(input_shape) >= 2 else 1
 
-        self.cfile.write(f'''
+        self.model_c.write(f'''
 Layer *load_model()
 {{
     Layer *currLayer, *headptr;
@@ -132,7 +134,7 @@ Layer *load_model()
         else:
             input_len = input_shape[0] * input_shape[1]
 
-        self.cfile.write(f'''
+        self.model_c.write(f'''
     // Layer {self.layer_count}: output_layer
     currLayer->type = LAYER_TYPE_OUTPUT;
     currLayer->name = strdup("Output");
@@ -185,7 +187,7 @@ Layer *load_model()
         info_name = f"{layer_name}_info"
         output_buffer = f"{layer_name}_output"
         acti_name = f"ACTI_TYPE_{layer.activation.__name__.upper()}"
-        self.cfile.write(f'''
+        self.model_c.write(f'''
     // Layer {self.layer_count}: {layer_name}
     float *{output_buffer} = (float *)malloc(({output_len} * {output_dim}) * sizeof(float));
     currLayer->type = LAYER_TYPE_CONV1D;
@@ -216,15 +218,18 @@ Layer *load_model()
         assert weight_kernel.shape == (
             kernel_size, input_depth, filters), "Create_Conv1D_Layer weight incorrect!"
         Cstring = self.__nparray_to_Cstring(weight_kernel)
-        self.hfile.write(
+        self.weight_c.write(
             f'float {weight_name}[{kernel_size}][{input_depth}][{filters}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(Cstring)
+        self.weight_h.write(
+            f'extern float {weight_name}[{kernel_size}][{input_depth}][{filters}];\n')
 
         weight_bias = weights[1]
         assert weight_bias.shape[0] == filters, "Create_Conv1D_Layer bias incorrect!"
         Cstring = self.__nparray_to_Cstring(weight_bias)
-        self.hfile.write(f'float {bias_name}[{filters}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(f'float {bias_name}[{filters}] = ')
+        self.weight_c.write(Cstring)
+        self.weight_h.write(f'extern float {bias_name}[{filters}];\n')
 
         return output_shape
 
@@ -245,7 +250,7 @@ Layer *load_model()
         output_buffer = f"{layer_name}_output"
         acti_name = f"ACTI_TYPE_{layer.activation.__name__.upper()}"
 
-        self.cfile.write(f'''
+        self.model_c.write(f'''
     // Layer {self.layer_count}: {layer_name}
     float *{output_buffer} = (float *)malloc(({output_len}) * sizeof(float));
     currLayer->type = LAYER_TYPE_DENSE;
@@ -273,14 +278,18 @@ Layer *load_model()
         assert weight_kernel.shape == (
             input_len, output_len), 'Create_Dense_Layer weight incorrect!'
         Cstring = self.__nparray_to_Cstring(weight_kernel)
-        self.hfile.write(f'float {weight_name}[{input_len}][{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(
+            f'float {weight_name}[{input_len}][{output_len}] = ')
+        self.weight_c.write(Cstring)
+        self.weight_h.write(
+            f'extern float {weight_name}[{input_len}][{output_len}];\n')
 
         weight_bias = weights[1]
         assert weight_bias.shape[0] == output_len, 'Create_Dense_Layer bias incorrect!'
         Cstring = self.__nparray_to_Cstring(weight_bias)
-        self.hfile.write(f'float {bias_name}[{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(f'float {bias_name}[{output_len}] = ')
+        self.weight_c.write(Cstring)
+        self.weight_h.write(f'extern float {bias_name}[{output_len}];\n')
 
         return (output_len,)
 
@@ -301,7 +310,7 @@ Layer *load_model()
         info_name = f"{layer_name}_info"
         output_buffer = f"{layer_name}_output"
 
-        self.cfile.write(f'''
+        self.model_c.write(f'''
     // Layer {self.layer_count}: {layer_name}
     float *{output_buffer} = (float *)malloc(({time_step if return_seq else 1} * {units}) * sizeof(float));
 
@@ -357,79 +366,99 @@ Layer *load_model()
         assert weight_kernel.shape == (
             input_features, output_len * 4), 'Create_Lstm_Layer weight incorrect!'
         Cstring = self.__nparray_to_Cstring(weight_kernel[:, :units])
-        self.hfile.write(
+        self.weight_c.write(
             f'float {weight_name}_i[{input_features}][{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(Cstring)
+        self.weight_h.write(
+            f'extern float {weight_name}_i[{input_features}][{output_len}];\n')
 
         Cstring = self.__nparray_to_Cstring(weight_kernel[:, units: units * 2])
-        self.hfile.write(
+        self.weight_c.write(
             f'float {weight_name}_f[{input_features}][{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(Cstring)
+        self.weight_h.write(
+            f'extern float {weight_name}_f[{input_features}][{output_len}];\n')
 
         Cstring = self.__nparray_to_Cstring(
             weight_kernel[:, units * 2: units * 3])
-        self.hfile.write(
+        self.weight_c.write(
             f'float {weight_name}_c[{input_features}][{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(Cstring)
+        self.weight_h.write(
+            f'extern float {weight_name}_c[{input_features}][{output_len}];\n')
 
         Cstring = self.__nparray_to_Cstring(
             weight_kernel[:, units * 3:])
-        self.hfile.write(
+        self.weight_c.write(
             f'float {weight_name}_o[{input_features}][{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(Cstring)
+        self.weight_h.write(
+            f'extern float {weight_name}_o[{input_features}][{output_len}];\n')
 
         # recurrent weight
         recurr_weight_kernel = weights[1]
         assert recurr_weight_kernel.shape == (
             output_len, output_len * 4), 'Create_Lstm_Layer recurrent weight incorrect!'
         Cstring = self.__nparray_to_Cstring(recurr_weight_kernel[:, :units])
-        self.hfile.write(
+        self.weight_c.write(
             f'float {recurr_weight_name}_i[{output_len}][{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(Cstring)
+        self.weight_h.write(
+            f'extern float {recurr_weight_name}_i[{output_len}][{output_len}];\n')
 
         Cstring = self.__nparray_to_Cstring(
             recurr_weight_kernel[:, units: units * 2])
-        self.hfile.write(
+        self.weight_c.write(
             f'float {recurr_weight_name}_f[{output_len}][{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(Cstring)
+        self.weight_h.write(
+            f'extern float {recurr_weight_name}_f[{output_len}][{output_len}];\n')
 
         Cstring = self.__nparray_to_Cstring(
             recurr_weight_kernel[:, units * 2: units * 3])
-        self.hfile.write(
+        self.weight_c.write(
             f'float {recurr_weight_name}_c[{output_len}][{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(Cstring)
+        self.weight_h.write(
+            f'extern float {recurr_weight_name}_c[{output_len}][{output_len}];\n')
 
         Cstring = self.__nparray_to_Cstring(
             recurr_weight_kernel[:, units * 3:])
-        self.hfile.write(
+        self.weight_c.write(
             f'float {recurr_weight_name}_o[{output_len}][{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(Cstring)
+        self.weight_h.write(
+            f'extern float {recurr_weight_name}_o[{output_len}][{output_len}];\n')
 
         # bias
         weight_bias = weights[2]
         assert weight_bias.shape == (
             output_len * 4,), 'Create_Lstm_Layer bias incorrect!'
         Cstring = self.__nparray_to_Cstring(weight_bias[:units])
-        self.hfile.write(
+        self.weight_c.write(
             f'float {bias_name}_i[{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(Cstring)
+        self.weight_h.write(f'extern float {bias_name}_i[{output_len}];\n')
 
         Cstring = self.__nparray_to_Cstring(weight_bias[units: units * 2])
-        self.hfile.write(
+        self.weight_c.write(
             f'float {bias_name}_f[{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(Cstring)
+        self.weight_h.write(f'extern float {bias_name}_i[{output_len}];\n')
 
         Cstring = self.__nparray_to_Cstring(
             weight_bias[units * 2: units * 3])
-        self.hfile.write(
+        self.weight_c.write(
             f'float {bias_name}_c[{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(Cstring)
+        self.weight_h.write(f'extern float {bias_name}_i[{output_len}];\n')
 
         Cstring = self.__nparray_to_Cstring(
             weight_bias[units * 3:])
-        self.hfile.write(
+        self.weight_c.write(
             f'float {bias_name}_o[{output_len}] = ')
-        self.hfile.write(Cstring)
+        self.weight_c.write(Cstring)
+        self.weight_h.write(f'extern float {bias_name}_i[{output_len}];\n')
 
         if return_seq:
             return (time_step, output_len)
@@ -448,7 +477,7 @@ Layer *load_model()
 
         info_name = f"{layer_name}_info"
         output_buffer = f"{layer_name}_output"
-        self.cfile.write(f'''
+        self.model_c.write(f'''
     float *{output_buffer} = (float *)malloc(({output_len} * {output_depth}) * sizeof(float));
     
     // Layer {self.layer_count}: {layer_name}
@@ -483,7 +512,7 @@ Layer *load_model()
 
         info_name = f"{layer_name}_info"
         output_buffer = f"{layer_name}_output"
-        self.cfile.write(f'''
+        self.model_c.write(f'''
     float *{output_buffer} = (float *)malloc(({output_len} * {output_depth}) * sizeof(float));
     
     // Layer {self.layer_count}: {layer_name}
@@ -507,7 +536,7 @@ Layer *load_model()
         return (output_len, output_depth)
 
     def __make_predict_func(self):
-        self.cfile.write('''
+        self.model_c.write('''
 unsigned int predict(Layer *headptr, float *input)
 {
     Layer *currLayer = headptr;
@@ -592,7 +621,7 @@ unsigned int predict(Layer *headptr, float *input)
  ''')
 
     def __make_include_lib(self):
-        self.cfile.write('''
+        self.model_c.write('''
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
