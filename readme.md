@@ -1,6 +1,7 @@
 ## Project: Neural Network Inference on C code
 
 >v1.0 Author：吳鑑軒 & NeatLab學長
+
 >v2.0 Author：楊博禕
 
 ## How to use?
