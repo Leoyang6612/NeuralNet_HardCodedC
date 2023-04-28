@@ -33,4 +33,5 @@
 ## VERSION 2.1
 ### v2.0, 04.27.2023, young boy
 >ARM CMSIS-DSP lib
+
 >Support layer: Dense only

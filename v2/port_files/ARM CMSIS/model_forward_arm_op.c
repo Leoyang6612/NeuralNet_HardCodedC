@@ -1,17 +1,14 @@
-#include "layer_struct.h"
 #include "model_forward_arm_op.h"
-#include "acti_forward.h"
 #include "arm_math.h"
-#include "matrix_op.h"
+#include "nrf_delay.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "nrf_delay.h"
 
-//#define PRINT_LAYER_SHAPE
-//#define PRINT_LAYER_OUTPUT
+ //#define PRINT_LAYER_SHAPE
+// #define PRINT_LAYER_OUTPUT
 
 void normalize_forward_arm_op(InputLayer *layer) {
 
@@ -32,7 +29,7 @@ void normalize_forward_arm_op(InputLayer *layer) {
     float *min_arr = (float *)calloc(input_depth, sizeof(float));
     float *max_arr = (float *)calloc(input_depth, sizeof(float));
 
-    //get min & max of depth(features)
+    // get min & max of depth(features)
     memcpy(min_arr, input, input_depth * sizeof(float));
     memcpy(max_arr, input, input_depth * sizeof(float));
 
@@ -88,23 +85,15 @@ void dense_forward_arm_op(DenseLayer *layer) {
     printf("(%d,) => (%d,)\n", input_length, output_length);
 #endif
 
-    // create input matrix W and vector x
     arm_matrix_instance_f32 mat_w = {input_length, output_length, weight};
-    arm_matrix_instance_f32 vec_x = {input_length, 1, input};
-    
-    // create output vector y
-    arm_matrix_instance_f32 vec_y = {output_length, 1, output};
-    
-    // create temporary buffer
-    arm_matrix_instance_f32 mat_buffer = {output_length, 1, output};
+    arm_matrix_instance_f32 vec_x = {1, input_length, input};
+    arm_matrix_instance_f32 mat_buffer = {1, output_length, output};
 
-    // perform matrix multiplication
-    arm_mat_mult_f32(&mat_w, &vec_x, &mat_buffer);
-    
     // y = Wx
-    //vector_map(output, weight, input, input_length, output_length, BUFFER_STATE_OVERWRITE);
+    arm_mat_mult_f32(&vec_x, &mat_w, &mat_buffer);
+    //y = x + b
+    arm_add_f32(output, bias, output, output_length);
     acti_forward(act, output, output_length);
-
 
 #ifdef PRINT_LAYER_OUTPUT
     for (int i = 0; i < output_length; i++) {
