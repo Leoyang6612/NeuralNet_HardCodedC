@@ -1,6 +1,11 @@
 {
     "files.associations": {
-        "acti_forward.h": "c"
+        "acti_forward.h": "c",
+        "model_forward_arm_op.h": "c",
+        "model_settings.h": "c"
     },
-    "python.formatting.provider": "autopep8"
+    "python.formatting.provider": "none",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
 }

@@ -88,7 +88,7 @@ unsigned int predict(Layer *headptr, float *input)
     }
     return argmax;
 }
-
+ 
 Layer *load_model()
 {
     Layer *currLayer, *headptr;
@@ -100,8 +100,8 @@ Layer *load_model()
     currLayer->type = LAYER_TYPE_INPUT;
     currLayer->name = strdup("Input");
     currLayer->input_layer = (InputLayer *)malloc(sizeof(InputLayer));
-    currLayer->input_layer->exec = normalize_forward;
-    // currLayer->input_layer->exec = NULL;
+    //currLayer->input_layer->exec = normalize_forward;
+     currLayer->input_layer->exec = NULL;
     currLayer->input_layer->input = input;
     currLayer->input_layer->output = input;
 
@@ -112,6 +112,7 @@ Layer *load_model()
     currLayer->next = (Layer *)malloc(sizeof(Layer));
     currLayer = currLayer->next;
 
+    
     // Layer 2: dense
     float *dense_output = (float *)malloc((64) * sizeof(float));
     currLayer->type = LAYER_TYPE_DENSE;
@@ -122,14 +123,15 @@ Layer *load_model()
     currLayer->dense_layer->output = dense_output;
 
     DenseInfo *dense_info = &(currLayer->dense_layer->info);
-    dense_info->in_dim0 = 5; // input_len
-    dense_info->units = 64;  // output_units
+    dense_info->in_dim0 = 5;      // input_len
+    dense_info->units = 64;       // output_units
     dense_info->weight = (float *)dense_w;
     dense_info->bias = (float *)dense_b;
     dense_info->act = ACTI_TYPE_RELU;
     currLayer->next = (Layer *)malloc(sizeof(Layer));
     currLayer = currLayer->next;
 
+    
     // Layer 3: dense_1
     float *dense_1_output = (float *)malloc((32) * sizeof(float));
     currLayer->type = LAYER_TYPE_DENSE;
@@ -140,14 +142,15 @@ Layer *load_model()
     currLayer->dense_layer->output = dense_1_output;
 
     DenseInfo *dense_1_info = &(currLayer->dense_layer->info);
-    dense_1_info->in_dim0 = 64; // input_len
-    dense_1_info->units = 32;   // output_units
+    dense_1_info->in_dim0 = 64;      // input_len
+    dense_1_info->units = 32;       // output_units
     dense_1_info->weight = (float *)dense_1_w;
     dense_1_info->bias = (float *)dense_1_b;
     dense_1_info->act = ACTI_TYPE_RELU;
     currLayer->next = (Layer *)malloc(sizeof(Layer));
     currLayer = currLayer->next;
 
+    
     // Layer 4: dense_2
     float *dense_2_output = (float *)malloc((1) * sizeof(float));
     currLayer->type = LAYER_TYPE_DENSE;
@@ -158,14 +161,15 @@ Layer *load_model()
     currLayer->dense_layer->output = dense_2_output;
 
     DenseInfo *dense_2_info = &(currLayer->dense_layer->info);
-    dense_2_info->in_dim0 = 32; // input_len
-    dense_2_info->units = 1;    // output_units
+    dense_2_info->in_dim0 = 32;      // input_len
+    dense_2_info->units = 1;       // output_units
     dense_2_info->weight = (float *)dense_2_w;
     dense_2_info->bias = (float *)dense_2_b;
     dense_2_info->act = ACTI_TYPE_LINEAR;
     currLayer->next = (Layer *)malloc(sizeof(Layer));
     currLayer = currLayer->next;
 
+    
     // Layer 5: output_layer
     currLayer->type = LAYER_TYPE_OUTPUT;
     currLayer->name = strdup("Output");
@@ -178,3 +182,4 @@ Layer *load_model()
 
     return headptr;
 }
+    

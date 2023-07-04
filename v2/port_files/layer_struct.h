@@ -99,6 +99,7 @@ typedef struct
     float *bias_o;
 
     bool return_seq;
+    ActivationType act;
 } LstmInfo;
 
 typedef struct

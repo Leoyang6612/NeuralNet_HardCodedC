@@ -181,6 +181,7 @@ void lstm_forward(LstmLayer *layer)
     int time_step = info.in_dim0; // time_step
     int input_dim = info.in_dim1; // input_dim
     int units = info.units;       // output_len
+    ActivationType act = info.act;
 
     // input_weight (input_dim, 4 * units)
     // input gate
@@ -347,6 +348,9 @@ void lstm_forward(LstmLayer *layer)
 
         ht_1 = ht;
     }
+
+    int output_length = return_seq ? units * time_step : units;
+    acti_forward(act, output, output_length);
 
 #ifdef PRINT_LAYER_OUTPUT
     if (return_seq)
