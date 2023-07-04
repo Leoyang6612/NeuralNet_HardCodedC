@@ -31,7 +31,7 @@ In `model_forward.c` file, uncomment the following lines to enable debugging:
 - Modified `Normalize-mymodel_API.c`
 - Use `enum` instead of `char[]` for `LAYER_TYPE` and `ACTI_TYPE`, refer to `layer_structure.h`
 - Check memory leakage using Dr. Memory (except for the entire model not being freed)
-  > Special thanks to [this link](https://www.cnblogs.com/phpandmysql/p/10953058.html)
+  > thanks a lot to [this link](https://www.cnblogs.com/phpandmysql/p/10953058.html)
 - Improved readability by adding string interpolation to `makeheader.py`
 
 ## VERSION 2
@@ -44,7 +44,7 @@ In `model_forward.c` file, uncomment the following lines to enable debugging:
 ## VERSION 2.1
 ### v2.1, 04.27.2023, young boy
 
-- Added ARM CMSIS-DSP lib
+- Added `ARM CMSIS-DSP lib`
 - Support for Dense layer only
 
 ## VERSION 2.2
