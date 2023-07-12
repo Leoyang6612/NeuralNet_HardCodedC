@@ -51,3 +51,4 @@ In `model_forward.c` file, uncomment the following lines to enable debugging:
 ### v2.2, 07.04.2023, 劉敏彤
 
 - Fixed bug in `LSTM_forward` by adding activation function
+- Fixed bug in `LSTM_forward` set ht-1 & Ct-1 to zero

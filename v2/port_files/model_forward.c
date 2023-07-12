@@ -8,8 +8,8 @@
 #include "acti_forward.h"
 #include "matrix_op.h"
 
-// #define PRINT_LAYER_SHAPE
-// #define PRINT_LAYER_OUTPUT
+#define PRINT_LAYER_SHAPE
+#define PRINT_LAYER_OUTPUT
 
 void normalize_forward(InputLayer *layer)
 {
@@ -255,7 +255,7 @@ void lstm_forward(LstmLayer *layer)
         // Ui * ht−1
         vector_map(it, U_i, ht_1, units, units, BUFFER_STATE_ACCUMULATE);
         vector_pointwise_add(it, it, b_i, units, BUFFER_STATE_OVERWRITE);
-        acti_forward(ACTI_TYPE_HARDSIGMOID, it, units);
+        acti_forward(ACTI_TYPE_SIGMOID, it, units);
 
         // printf("it\n");
         // for (int i = 0; i < units; i++)
@@ -271,7 +271,7 @@ void lstm_forward(LstmLayer *layer)
         // Uf * ht−1
         vector_map(ft, U_f, ht_1, units, units, BUFFER_STATE_ACCUMULATE);
         vector_pointwise_add(ft, ft, b_f, units, BUFFER_STATE_OVERWRITE);
-        acti_forward(ACTI_TYPE_HARDSIGMOID, ft, units);
+        acti_forward(ACTI_TYPE_SIGMOID, ft, units);
 
         // printf("ft\n");
         // for (int i = 0; i < units; i++)
@@ -303,7 +303,7 @@ void lstm_forward(LstmLayer *layer)
         // Uo * ht−1
         vector_map(Ot, U_o, ht_1, units, units, BUFFER_STATE_ACCUMULATE);
         vector_pointwise_add(Ot, Ot, b_o, units, BUFFER_STATE_OVERWRITE);
-        acti_forward(ACTI_TYPE_HARDSIGMOID, Ot, units);
+        acti_forward(ACTI_TYPE_SIGMOID, Ot, units);
         // printf("Ot\n");
         // for (int i = 0; i < units; i++)
         // {
@@ -346,11 +346,15 @@ void lstm_forward(LstmLayer *layer)
             }
         }
 
-        ht_1 = ht;
+        // ht_1 = ht;
+        memcpy(ht_1, ht, sizeof(float) * units);
     }
 
     int output_length = return_seq ? units * time_step : units;
     acti_forward(act, output, output_length);
+
+    memset(ht_1, 0, sizeof(float) * units);
+    memset(Ct_1, 0, sizeof(float) * units);
 
 #ifdef PRINT_LAYER_OUTPUT
     if (return_seq)
